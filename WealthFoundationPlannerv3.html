@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wealth Foundation Planning Sheet | Altimetry</title>
+    <style>
+        :root {
+            --primary: #0f172a; 
+            --accent: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #334155;
+            --border: #e2e8f0;
+            --modal-overlay: rgba(15, 23, 42, 0.6);
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- HEADER --- */
+        .top-bar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 20px;
+            text-align: center;
+        }
+        .logo { height: 50px; width: auto; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+        h1 { margin: 5px 0 0; color: var(--primary); font-size: 1.6rem; }
+        p.subtitle { margin: 0; color: #64748b; font-size: 0.9rem; }
+
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; flex: 1; }
+
+        /* --- ACCORDION STYLES --- */
+        .accordion {
+            background-color: var(--card-bg);
+            color: var(--primary);
+            cursor: pointer;
+            padding: 20px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            transition: 0.4s;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .accordion.first { border-radius: 12px 12px 0 0; }
+        .accordion.last { border-radius: 0 0 12px 12px; border-bottom: none; }
+        .accordion.active, .accordion:hover { background-color: #eff6ff; }
+        .accordion:after { content: '\002B'; font-weight: bold; font-size: 1.5rem; color: var(--accent); }
+        .accordion.active:after { content: "\2212"; }
+
+        .panel {
+            padding: 0 20px;
+            background-color: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+        }
+        .panel.open { padding: 30px 20px; border-bottom: 1px solid var(--border); }
+
+        /* --- DASHBOARD METRICS --- */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card {
+            background: var(--card-bg); padding: 25px; border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid var(--border); text-align: center;
+        }
+        .metric-card h3 { margin: 0; font-size: 0.85rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; }
+        .metric-card .value { font-size: 2.2rem; font-weight: 700; margin-top: 10px; color: var(--primary); }
+
+        /* --- FORMS & TABLES --- */
+        .input-section { margin-bottom: 30px; }
+        .form-row { display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 200px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        button.add-btn {
+            background-color: var(--accent); color: white; border: none; padding: 12px 30px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; height: 45px;
+        }
+        button.add-btn:hover { background-color: #1d4ed8; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; background: var(--bg); padding: 12px; font-size: 0.85rem; color: #64748b; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+        .input-cell input { border: 1px solid #e2e8f0; padding: 8px; width: 100px; border-radius: 4px; }
+
+        .type-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .bg-green { background: #dcfce7; color: #166534; }
+        .bg-red { background: #fee2e2; color: #991b1b; }
+        .bg-blue { background: #dbeafe; color: #1e40af; }
+        .delete-btn { color: #cbd5e1; cursor: pointer; border: none; background: none; font-size: 1.2rem; }
+        .delete-btn:hover { color: #ef4444; }
+
+        /* --- ALLOCATION CHART --- */
+        .allocation-bar { display: flex; height: 40px; border-radius: 20px; overflow: hidden; margin-top: 20px; font-weight: bold; color: white; font-size: 0.9rem; }
+        .bar-segment { display: flex; align-items: center; justify-content: center; transition: width 0.5s; }
+        .seg-cash { background-color: #10b981; }
+        .seg-bonds { background-color: #f59e0b; }
+        .seg-equity { background-color: #3b82f6; }
+        .legend { display: flex; gap: 20px; justify-content: center; margin-top: 10px; font-size: 0.9rem; }
+        .legend-item span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 5px; }
+
+        /* --- RESET BUTTON --- */
+        .reset-container { margin-top: 40px; text-align: center; border-top: 1px solid var(--border); padding-top: 30px; }
+        .reset-btn {
+            background-color: white; border: 1px solid var(--danger); color: var(--danger);
+            padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .reset-btn:hover { background-color: var(--danger); color: white; }
+
+        /* --- MODAL --- */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: var(--modal-overlay); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 40px; border-radius: 12px; width: 80%; max-width: 700px; position: relative; }
+        .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        footer { text-align: center; padding: 20px; font-size: 0.85rem; color: #94a3b8; border-top: 1px solid var(--border); margin-top: auto; background: white; }
+        footer a { color: var(--accent); cursor: pointer; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <header class="top-bar">
+        <img src="logo.svg" alt="Altimetry Powered by Valens Research" class="logo">
+        <h1>Wealth Foundation Planning Sheet</h1>
+        <p class="subtitle">Personal Financial Statement & Cash Flow Planner</p>
+    </header>
+
+    <div class="container">
+        
+        <button class="accordion first active">Step 1: Current Financial Picture</button>
+        <div class="panel open" style="max-height: 2000px;"> <div class="dashboard-grid">
+                <div class="metric-card"><h3>Net Cash Flow</h3><div class="value" id="netCashFlow">$0.00</div></div>
+                <div class="metric-card"><h3>Net Worth</h3><div class="value" id="netWorth">$0.00</div></div>
+                <div class="metric-card"><h3>Total Liquidity</h3><div class="value" id="liquidTotal">$0.00</div></div>
+            </div>
+
+            <div class="input-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="entryCategory" onchange="updatePlaceholder()">
+                            <option value="Income">Income (Monthly)</option>
+                            <option value="Expense">Expense (Monthly)</option>
+                            <option value="Liquid">Liquid Asset (Value)</option>
+                            <option value="Illiquid">Illiquid Asset (Value)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="entryName" placeholder="Enter source name...">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount ($)</label>
+                        <input type="number" id="entryAmount" placeholder="0.00">
+                    </div>
+                    <button class="add-btn" onclick="addEntry()">+ Add</button>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:30px;">
+                <div>
+                    <h4>Income & Expenses</h4>
+                    <table id="cashFlowTable"><thead><tr><th>Source</th><th>Type</th><th>Amount</th><th></th></tr></thead><tbody></tbody></table>
+                </div>
+                <div>
+                    <h4>Assets</h4>
+                    <table id="assetsTable"><thead><tr><th>Asset</th><th>Type</th><th>Value</th><th></th></tr></thead><tbody></tbody></table>
+                </div>
+            </div>
+        </div>
+
+        <button class="accordion">Step 2: Future Obligations (Timetable)</button>
+        <div class="panel">
+            <div style="background: #f8fafc; border-left: 4px solid #64748b; padding: 15px; margin: 20px 0; font-size: 0.95rem; color: #475569;">
+                <strong>Instructions:</strong> Estimate major expenses you expect in the coming years that are <b>not</b> covered by your monthly income.
+                <ul style="margin-bottom:0; padding-left:20px; margin-top:5px;">
+                    <li>Include big ticket items like: Down Payments, Weddings, Tuition, or Major Renovations.</li>
+                    <li><b>Do NOT Include:</b> Regular expenses serviced by your monthly income (e.g., Car payments, regular Mortgage payments, Grocery bills).</li>
+                </ul>
+            </div>
+            
+            <table id="timetableTable">
+                <thead>
+                    <tr>
+                        <th width="40%">Obligation Category</th>
+                        <th width="20%">Next 2 Years<br><span style="font-weight:normal; font-size:0.75rem;">(Cash Needs)</span></th>
+                        <th width="20%">2 - 5 Years<br><span style="font-weight:normal; font-size:0.75rem;">(Bond/Income Needs)</span></th>
+                        <th width="20%">5 - 10 Years<br><span style="font-weight:normal; font-size:0.75rem;">(Growth Needs)</span></th>
+                    </tr>
+                </thead>
+                <tbody id="timetableBody">
+                    </tbody>
+                <tfoot>
+                    <tr style="background:#f1f5f9; font-weight:bold;">
+                        <td>TOTAL NEEDS</td>
+                        <td id="total02">$0.00</td>
+                        <td id="total25">$0.00</td>
+                        <td id="total510">$0.00</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <button class="accordion last">Step 3: Sample Allocation</button>
+        <div class="panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; margin-top:20px;">
+                <h3 style="margin:0;">Recommended Liquid Asset Allocation</h3>
+                <div>
+                    <label style="font-size:0.85rem; font-weight:bold; margin-right:10px;">Desired 5-10 Year Split:</label>
+                    <select id="riskSplit" onchange="updateAllocation()" style="width: auto; min-width: 250px; padding: 8px;">
+                        <option value="0">0% Bonds / 100% Equity</option>
+                        <option value="0.25">25% Bonds / 75% Equity</option>
+                        <option value="0.5" selected>50% Bonds / 50% Equity</option>
+                        <option value="0.75">75% Bonds / 25% Equity</option>
+                        <option value="1">100% Bonds / 0% Equity</option>
+                    </select>
+                </div>
+            </div>
+
+            <p>Based on your <b>Total Liquid Assets</b> (<span id="allocLiquidTotal" style="font-weight:bold;">$0.00</span>) and your <b>Future Obligations</b>.</p>
+
+            <div class="allocation-bar">
+                <div class="bar-segment seg-cash" id="barCash" style="width: 33%">Cash</div>
+                <div class="bar-segment seg-bonds" id="barBonds" style="width: 33%">Bonds</div>
+                <div class="bar-segment seg-equity" id="barEquity" style="width: 33%">Equity</div>
+            </div>
+            <div class="legend">
+                <div class="legend-item"><span style="background:#10b981;"></span>Cash (0-2 Yrs)</div>
+                <div class="legend-item"><span style="background:#f59e0b;"></span>Bonds (2-5 Yrs)</div>
+                <div class="legend-item"><span style="background:#3b82f6;"></span>Equities (5+ Yrs)</div>
+            </div>
+
+            <table style="margin-top:30px;">
+                <thead><tr><th>Bucket</th><th>Target Amount</th><th>Description</th></tr></thead>
+                <tbody>
+                    <tr><td><b>Cash / Equivalent</b></td><td id="targetCash">$0.00</td><td>Funds for immediate obligations (Safety Net + Next 2 Years).</td></tr>
+                    <tr><td><b>Bonds / Fixed Income</b></td><td id="targetBonds">$0.00</td><td>Funds for mid-term obligations (2-5 Years) + portion of long-term.</td></tr>
+                    <tr><td><b>Equities / Growth</b></td><td id="targetEquity">$0.00</td><td>Remaining wealth for long-term growth.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="reset-container">
+            <button class="reset-btn" onclick="clearAllData()">&#8634; Reset & Clear All Data</button>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Altimetry. All rights reserved.</p>
+        <p><a onclick="openModal()">View Legal Disclosures & Important Information</a></p>
+    </footer>
+
+    <div id="disclosureModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2>Legal Disclosures</h2>
+            <div style="max-height: 400px; overflow-y: auto; color: #475569;">
+                <p><strong>Last Updated: November 2025</strong></p>
+                <p>© 2024 (Valens Research LLC, Valens Credit LLC, Valens Securities, Equity Analysis & Strategy and Altimetry Research and/or its licensors, subsidiaries and affiliates hereinafter referred to as “Valens”).</p>
+                <p>All rights reserved. </p>
+                <p><b>The Wealth Foundation tool should be used for informational and educational purposes only. It is not intended, and should not be interpreted, as individual or personalized investment advice. You should consult your own investment and tax advisers before making any investment decision.</b></p>
+                <p>Any analyses issued by Valens or any of its directors, shareholders, officers, employees or agents  (“Valens Analyses”) regarding credit, business, equity, asset and asset allocation, income and outcome, growth, liquid, investment, spending, income, cash and cash flow or any other topics are Valens’ current opinions of the relative future state of the relevant subject matter. Research publications published or soon to be published or shared by Valens or any of its directors, shareholders, officers, employees or agents  (“Valens Publications”) may include Valens’ current opinions regarding the future state of these matters as well.
+                </p>
+                <p>Each of the entities referred to as “Valens” is a financial publishing company and is not registered with the Securities and Exchange Commission as an investment adviser. Valens Analyses and Valens Publications are provided solely for educational and informational purposes. Investment decisions should not be based solely on Valens Analyses or Valens Publications. </p>
+                <p>Valens’ Analyses and Valens Publications do not constitute or provide professional, personalized investment or financial advice to any person or company. Valens’ Analyses and Valens Publications are not and do not provide professional or personalized recommendations to purchase, sell, or hold particular securities, spend or hold personal assets and properties.</p>
+                <p>Valens accepts no liability or responsibility for any harm or damages that may arise from any misconception that Valens is seeking to provide personalized investment advice. Valens’ Analyses may not address all risks associated with particular investment activity.</p>
+                <p>Neither Valens’ Analyses nor Valens Publications are intended to address the suitability of an investment or allocation for any particular person. Valens does not accept any kind of liability or responsibility for harm resulting from a misconception that Valens Analyses or Valens Publications make investment recommendations based on suitability for a particular person.</p>
+                <p>Valens issues Valens Analyses and publishes Valens Publications with the expectation and understanding that each user of the information contained therein will make their own study and evaluation, in a deliberate, cautious and prudent way, of each security that is under consideration for purchasing, holding, selling or for any transaction.</p>
+                <p>Readers of Valens Analyses and Valens Publications should not make any investment decision based solely on any of the Valens Analyses or Valens Publications. If in doubt of making a particular investment decision, you should contact a financial or other professional advisor.</p>
+                <p>All information and calculations contained or utilized herein is obtained by Valens from sources believed by it to be accurate, up to date and reliable. Because of the possibility of human or mechanical error as well as other factors, however, all information contained herein is provided “as is”; without representation of accuracy or any kind of warranty, obligation or any kind of commitment and undertaking. </p>
+                <p>Valens adopts all reasonable measures so that the information used or to be used in its products is of sufficient quality.  </p>
+                <p>However, Valens is not an auditor and cannot in every instance independently verify or validate information received. Under no circumstances shall Valens or any of its directors, shareholders, officers, employees or agents have any liability or responsibility to any person or entity/entities for any kind of loss or damage in whole or in part caused by, resulting from, or relating to, any error (negligent or otherwise) or other circumstance or contingency within or outside the control of Valens or any of its directors, officers, employees or agents in connection with the procurement, collection, compilation, analysis, interpretation, communication, publication or delivery of any such information, or any direct, indirect, special, consequential, compensatory or incidental damages whatsoever (including without limitation, lost profits), even if Valens or any of its directors, shareholders, officers, employees or agents  is/are advised in advance of the possibility of such damages, resulting from the use of or inability to use of, any such information. </p>
+                <p>Any analysis, financial reporting analysis, projections, calculations, assumptions and other observations, if any, constituting any part of the information contained herein are, and must be construed solely as, statements of opinion and not statements of fact or recommendations to purchase, sell or hold any securities and/or assets. </p>
+
+            </div>
+            <div style="text-align: right; margin-top: 20px;"><button onclick="closeModal()" style="padding:10px 20px;">Close</button></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        let entries = JSON.parse(localStorage.getItem('wealthData')) || [];
+        
+        // Default categories for Timetable (Matches Excel logic)
+        const defaultTimetable = [
+            { cat: "Safety Net / Emergency Fund", t0: 0, t2: 0, t5: 0 },
+            { cat: "Home Down Payment / Projects", t0: 0, t2: 0, t5: 0 },
+            { cat: "Family (Wedding/Education)", t0: 0, t2: 0, t5: 0 },
+            { cat: "Travel / Vacation", t0: 0, t2: 0, t5: 0 },
+            { cat: "Other Major Expenses", t0: 0, t2: 0, t5: 0 }
+        ];
+        
+        let timetableData = JSON.parse(localStorage.getItem('timetableData')) || defaultTimetable;
+
+        const moneyFormatter = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+        // --- HELPER: AUTO RESIZE ACTIVE PANEL ---
+        function autoResizeActivePanel() {
+            // Find the panel that is currently marked as open
+            const activePanel = document.querySelector('.panel.open');
+            if(activePanel) {
+                // Force a recalculation of the height
+                activePanel.style.maxHeight = activePanel.scrollHeight + "px";
+            }
+        }
+
+        // --- ACCORDION LOGIC ---
+        const acc = document.getElementsByClassName("accordion");
+        for (let i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                const panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                    panel.classList.remove("open");
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + "px";
+                    panel.classList.add("open");
+                }
+            });
+        }
+
+        // --- STEP 1: CURRENT PICTURE ---
+        function updateUI() {
+            const cashFlowBody = document.querySelector('#cashFlowTable tbody');
+            const assetsBody = document.querySelector('#assetsTable tbody');
+            cashFlowBody.innerHTML = ''; assetsBody.innerHTML = '';
+
+            let totalIncome = 0, totalExpense = 0, totalLiquid = 0, totalIlliquid = 0;
+
+            entries.forEach((entry, index) => {
+                let badgeClass = entry.category === 'Income' ? 'bg-green' : (entry.category === 'Expense' ? 'bg-red' : 'bg-blue');
+                const row = `<tr><td><b>${entry.name}</b></td><td><span class="type-badge ${badgeClass}">${entry.category}</span></td><td>${moneyFormatter.format(entry.amount)}</td><td><button class="delete-btn" onclick="deleteEntry(${index})">×</button></td></tr>`;
+
+                if (['Income', 'Expense'].includes(entry.category)) {
+                    cashFlowBody.innerHTML += row;
+                    if(entry.category === 'Income') totalIncome += entry.amount; else totalExpense += entry.amount;
+                } else {
+                    assetsBody.innerHTML += row;
+                    if(entry.category === 'Liquid') totalLiquid += entry.amount; else totalIlliquid += entry.amount;
+                }
+            });
+
+            document.getElementById('netCashFlow').textContent = moneyFormatter.format(totalIncome - totalExpense);
+            document.getElementById('netWorth').textContent = moneyFormatter.format(totalLiquid + totalIlliquid);
+            document.getElementById('liquidTotal').textContent = moneyFormatter.format(totalLiquid);
+            
+            // Pass Liquid Total to Step 3
+            document.getElementById('allocLiquidTotal').textContent = moneyFormatter.format(totalLiquid);
+            
+            localStorage.setItem('wealthData', JSON.stringify(entries));
+            updateAllocation(); // Update step 3 whenever step 1 changes
+            autoResizeActivePanel(); // FIX: Ensure height adjusts to new rows
+        }
+
+        function addEntry() {
+            const name = document.getElementById('entryName').value;
+            const amount = parseFloat(document.getElementById('entryAmount').value);
+            const category = document.getElementById('entryCategory').value;
+            if (name && amount > 0) {
+                entries.push({ name, amount, category });
+                document.getElementById('entryName').value = ''; document.getElementById('entryAmount').value = '';
+                updateUI();
+            }
+        }
+        function deleteEntry(index) { entries.splice(index, 1); updateUI(); }
+        function updatePlaceholder() {
+            const cat = document.getElementById('entryCategory').value;
+            document.getElementById('entryName').placeholder = cat === 'Income' ? "Enter income source..." : (cat === 'Expense' ? "Enter expense..." : "Enter asset name...");
+        }
+
+        // --- STEP 2: TIMETABLE ---
+        function renderTimetable() {
+            const tbody = document.getElementById('timetableBody');
+            tbody.innerHTML = '';
+            let sum0 = 0, sum2 = 0, sum5 = 0;
+
+            timetableData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.cat}</td>
+                    <td class="input-cell"><input type="number" value="${row.t0}" onchange="updateTimetable(${index}, 't0', this.value)"></td>
+                    <td class="input-cell"><input type="number" value="${row.t2}" onchange="updateTimetable(${index}, 't2', this.value)"></td>
+                    <td class="input-cell"><input type="number" value="${row.t5}" onchange="updateTimetable(${index}, 't5', this.value)"></td>
+                `;
+                tbody.appendChild(tr);
+                sum0 += parseFloat(row.t0); sum2 += parseFloat(row.t2); sum5 += parseFloat(row.t5);
+            });
+
+            document.getElementById('total02').textContent = moneyFormatter.format(sum0);
+            document.getElementById('total25').textContent = moneyFormatter.format(sum2);
+            document.getElementById('total510').textContent = moneyFormatter.format(sum5);
+            
+            updateAllocation();
+            autoResizeActivePanel(); // FIX: Ensure height adjusts
+        }
+
+        function updateTimetable(index, field, value) {
+            timetableData[index][field] = parseFloat(value) || 0;
+            localStorage.setItem('timetableData', JSON.stringify(timetableData));
+            renderTimetable();
+        }
+
+        // --- STEP 3: ALLOCATION LOGIC ---
+        function updateAllocation() {
+            // 1. Get Totals
+            let liquidTotal = entries.reduce((acc, curr) => (curr.category === 'Liquid' ? acc + curr.amount : acc), 0);
+            
+            let needCash = timetableData.reduce((acc, row) => acc + row.t0, 0); // Next 2 Yrs
+            let needMed = timetableData.reduce((acc, row) => acc + row.t2, 0);  // 2-5 Yrs
+            let needLong = timetableData.reduce((acc, row) => acc + row.t5, 0); // 5-10 Yrs
+
+            // 2. Get Split Ratio
+            let bondRatio = parseFloat(document.getElementById('riskSplit').value);
+            
+            // 3. Calculate Buckets
+            let targetCash = needCash;
+            let targetBonds = needMed + (needLong * bondRatio);
+            
+            // Equity is the remainder of liquid assets after covering obligations
+            // (If obligations > liquid assets, equity goes to 0)
+            let remainingForEquity = Math.max(0, liquidTotal - targetCash - targetBonds);
+            
+            // Total of targets (used for bar chart percentages)
+            let totalAllocated = targetCash + targetBonds + remainingForEquity;
+            if (totalAllocated === 0) totalAllocated = 1; // prevent divide by zero
+
+            // 4. Update UI
+            document.getElementById('targetCash').textContent = moneyFormatter.format(targetCash);
+            document.getElementById('targetBonds').textContent = moneyFormatter.format(targetBonds);
+            document.getElementById('targetEquity').textContent = moneyFormatter.format(remainingForEquity);
+
+            // Update Bar Chart Widths
+            document.getElementById('barCash').style.width = (targetCash / totalAllocated * 100) + "%";
+            document.getElementById('barBonds').style.width = (targetBonds / totalAllocated * 100) + "%";
+            document.getElementById('barEquity').style.width = (remainingForEquity / totalAllocated * 100) + "%";
+            
+            // Update Bar Chart Labels (Hide text if segment is too small)
+            document.getElementById('barCash').textContent = (targetCash / totalAllocated) > 0.1 ? "Cash" : "";
+            document.getElementById('barBonds').textContent = (targetBonds / totalAllocated) > 0.1 ? "Bonds" : "";
+            document.getElementById('barEquity').textContent = (remainingForEquity / totalAllocated) > 0.1 ? "Equity" : "";
+        }
+
+        // --- RESET / CLEAR ALL FUNCTION ---
+        function clearAllData() {
+            if(confirm("Are you sure? This will delete all your entries and reset the form.")) {
+                localStorage.removeItem('wealthData');
+                localStorage.removeItem('timetableData');
+                // FORCE RELOAD to ensure all DOM elements and Variables are cleanly reset
+                location.reload();
+            }
+        }
+
+        // --- MODAL & INIT ---
+        function openModal() { document.getElementById('disclosureModal').style.display = "block"; }
+        function closeModal() { document.getElementById('disclosureModal').style.display = "none"; }
+        window.onclick = function(e) { if(e.target == document.getElementById('disclosureModal')) closeModal(); }
+
+        updateUI();
+        renderTimetable();
+
+    </script>
+</body>
+</html>
